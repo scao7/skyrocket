@@ -57,9 +57,6 @@ def exist_in_json(stock):
         count = count + 1
     return -1
 
-# import os
-# os.environ["EAI_USERNAME"] = 'scao7@crimson.ua.edu'
-# os.environ["EAI_PASSWORD"] = 'Cst1995!'
 from expertai.nlapi.cloud.client import ExpertAiClient
 client = ExpertAiClient()
 language= 'en'
@@ -163,7 +160,6 @@ def index():
 def receive_message(message): 
     print('########: {}'.format(message))
     while True:
-        time.sleep(2)
         request_comments()
         send(1)
         emit('redirect', {'url': url_for('index')})
