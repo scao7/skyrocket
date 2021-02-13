@@ -6,10 +6,14 @@ import json
 import numpy as np 
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
+import threading
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///comments.db'
 db = SQLAlchemy(app)
+
+
+
 class Comments(db.Model):
     id = db.Column(db.Integer)
     stock = db.Column(db.String(200),nullable= False)
@@ -34,6 +38,9 @@ class Sentimental(db.Model):
         return '<Name %r> ' % self.id
 
 
+import os
+os.environ["EAI_USERNAME"] = 'scao7@crimson.ua.edu'
+os.environ["EAI_PASSWORD"] = 'Cst1995!'
 app.config['SECRET_KEY'] = 'secretkey'
 app.config['DEBUG'] = True
 socketio = SocketIO(app)
@@ -62,6 +69,7 @@ client = ExpertAiClient()
 language= 'en'
 
 def request_comments():
+    print(threading.current_thread().name)
     headers = {
             'authority': 'www.reddit.com',
             'cache-control': 'max-age=0',
@@ -88,44 +96,47 @@ def request_comments():
         stocks = check_stock(content)
         if(len(stocks)!=0):
             for stock in stocks:
-                print("item ####: {}".format(link_title))
-                print('created ###: {}'.format(created_utc))
-                print('content: ### {}'.format(content))
-                print('stock ### {}'.format(str(stock)))
-                print('author ### {}'.format(author))
+                # print("item ####: {}".format(link_title))
+                # print('created ###: {}'.format(created_utc))
+                # print('content: ### {}'.format(content))
+                # print('stock ### {}'.format(str(stock)))
+                # print('author ### {}'.format(author))
                 emotion = 0.0
                 # if(db.session.query(Comments.id).filter_by(created_utc=created_utc).scalar() is None):
                 
-                # if(not Comments.query.filter_by(created_utc=created_utc).first()):
-                print("query utc result: not same utc")
-                try:
-                    output = client.specific_resource_analysis(body={"document": {"text": content}}, params={'language': language, 'resource': 'sentiment'})
-                    emotion = output.sentiment.overall
-                except:
-                    print('no emotion')
-                    emotion = 0.0
-                print('emotion ###: {}'.format(emotion))
-                #create value to push to database
-                new_comment= Comments(stock = stock,comment_body =content,link_title=link_title,emotion=emotion, author = author, created_utc=created_utc)
-                                # push to database
-                try:
-                    db.session.add(new_comment)
-                    db.session.commit()
-                    print('sucess added to database')
-                except:
-                    print('can nott add to database')
-                        
-                # add to sentimental database
-                get_sentimental = Sentimental.query.filter_by(stock=stock).first()
-                if(get_sentimental):
-                    get_sentimental.mentioned_times +=1
-                    get_sentimental.overall_emotion += emotion
-                    db.session.commit()
-                else:
-                    new_sentimental = Sentimental(stock = stock, overall_emotion=emotion, mentioned_times=1)
-                    db.session.add(new_sentimental)
-                    db.session.commit()
-            
+                if(not Comments.query.filter_by(created_utc=created_utc).first()):
+                    # print("query utc result: not same utc")
+                    try:
+                        output = client.specific_resource_analysis(body={"document": {"text": content}}, params={'language': language, 'resource': 'sentiment'})
+                        emotion = output.sentiment.overall
+                    except:
+                        print('no emotion')
+                        emotion = 0.0
+                    print('emotion ###: {}'.format(emotion))
+                    #create value to push to database
+                    new_comment= Comments(stock = stock,comment_body =content,link_title=link_title,emotion=emotion, author = author, created_utc=created_utc)
+                                    # push to database
+                  
+                            
+                    # add to sentimental database
+                    get_sentimental = Sentimental.query.filter_by(stock=stock).first()
+                    if(get_sentimental):
+                        get_sentimental.mentioned_times +=1
+                        get_sentimental.overall_emotion += emotion
+                        # db.session.commit()
+                    else:
+                        new_sentimental = Sentimental(stock = stock, overall_emotion=emotion, mentioned_times=1)
+                        db.session.add(new_sentimental)
+                        # db.session.commit()
+                    
+                    try:
+                        db.session.add(new_comment)
+                        db.session.commit()
+                        print('sucess added to database')
+                    except:
+                        print('can nott add to database')
+    
+
 
 
 
@@ -139,6 +150,7 @@ def index():
         print(item.mentioned_times)
         highestTimes=item.mentioned_times
         break
+    threading.Thread(target=request_comments).start()
     # print('query is : {}'.format(query))
     # print('query type is : {}'.format(type(query)))
     # stocks_emotion =  [{'stock': 'example','mentioned_times': 1, 'emotion': 0 }]
@@ -156,17 +168,16 @@ def index():
     # sorted_stock_emotion = sorted(stocks_emotion, key=lambda k: k['mentioned_times'],reverse=True)  
     return render_template('index.html', comments = query.limit(20), stockSentimental=Sentimental_query,highestTimes=highestTimes)
 
-@socketio.on('message')
-def receive_message(message): 
-    print('########: {}'.format(message))
-    while True:
-        request_comments()
-        send(1)
-        emit('redirect', {'url': url_for('index')})
+# @socketio.on('message')
+# def receive_message(message): 
+#     print('########: {}'.format(message))
+#     while True:
+#         request_comments()
+#         send(1)
+#         emit('redirect', {'url': url_for('index')})
 
-    # send(coments)
-
-    # send(stockSentimental)
-    # send(highesetTimes)
 if __name__ == '__main__':
-    socketio.run(app)
+    # scheduler.add_job(id = 'scheduled task', func = request_comments, trigger = 'interval',seconds = 5)
+    # scheduler.start()
+    app.run()
+    # socketio.run(app)

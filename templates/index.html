@@ -3,7 +3,8 @@
 
 {{massage}}
 
-<ul style="height: 90vh; overflow: auto;" id='refresh'>
+<ul style="height: 90vh; overflow: auto;" >
+    <button type="button" class="btn btn-primary" id='no refresh' onClick="myStopFunction()">stop refresh</button>
     {% for post in comments %}
     <article class="media content-section" id="article">
         <div class="media-body" id="div1">
