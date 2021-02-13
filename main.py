@@ -96,35 +96,35 @@ def request_comments():
                 emotion = 0.0
                 # if(db.session.query(Comments.id).filter_by(created_utc=created_utc).scalar() is None):
                 
-                if(not Comments.query.filter_by(created_utc=created_utc).first()):
-                    print("query utc result: not same utc")
-                    try:
-                        output = client.specific_resource_analysis(body={"document": {"text": content}}, params={'language': language, 'resource': 'sentiment'})
-                        emotion = output.sentiment.overall
-                    except:
-                        print('no emotion')
-                        emotion = 0.0
-                    print('emotion ###: {}'.format(emotion))
-                    #create value to push to database
-                    new_comment= Comments(stock = stock,comment_body =content,link_title=link_title,emotion=emotion, author = author, created_utc=created_utc)
-                                    # push to database
-                    try:
-                        db.session.add(new_comment)
-                        db.session.commit()
-                        print('sucess added to database')
-                    except:
-                        print('can nott add to database')
-                            
-                    # add to sentimental database
-                    get_sentimental = Sentimental.query.filter_by(stock=stock).first()
-                    if(get_sentimental):
-                        get_sentimental.mentioned_times +=1
-                        get_sentimental.overall_emotion += emotion
-                        db.session.commit()
-                    else:
-                        new_sentimental = Sentimental(stock = stock, overall_emotion=emotion, mentioned_times=1)
-                        db.session.add(new_sentimental)
-                        db.session.commit()
+                # if(not Comments.query.filter_by(created_utc=created_utc).first()):
+                print("query utc result: not same utc")
+                try:
+                    output = client.specific_resource_analysis(body={"document": {"text": content}}, params={'language': language, 'resource': 'sentiment'})
+                    emotion = output.sentiment.overall
+                except:
+                    print('no emotion')
+                    emotion = 0.0
+                print('emotion ###: {}'.format(emotion))
+                #create value to push to database
+                new_comment= Comments(stock = stock,comment_body =content,link_title=link_title,emotion=emotion, author = author, created_utc=created_utc)
+                                # push to database
+                try:
+                    db.session.add(new_comment)
+                    db.session.commit()
+                    print('sucess added to database')
+                except:
+                    print('can nott add to database')
+                        
+                # add to sentimental database
+                get_sentimental = Sentimental.query.filter_by(stock=stock).first()
+                if(get_sentimental):
+                    get_sentimental.mentioned_times +=1
+                    get_sentimental.overall_emotion += emotion
+                    db.session.commit()
+                else:
+                    new_sentimental = Sentimental(stock = stock, overall_emotion=emotion, mentioned_times=1)
+                    db.session.add(new_sentimental)
+                    db.session.commit()
             
 
 
