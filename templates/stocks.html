@@ -1,0 +1,58 @@
+{% extends "layout.html" %}
+{% block content %}
+<ul style="height: 90vh; overflow: auto;" id='refresh'>
+    {% for post in posts %}
+    <article class="media content-section" id="article">
+        <div class="media-body" id="div1">
+            <div class="article-metadata">
+                <a class="mr-2" href="#">{{ post.author }}</a>
+                <small class="text-muted">{{ post.title }}</small>
+            </div>
+            <h2><a class="article-title" href="#">{{ post.stock }}</a></h2>
+            <p class="article-content">{{ post.content }}</p>
+        </div>
+    </article>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
+    {% endfor %}
+</ul>
+{% endblock content %}
+
+{% block sidebar%}
+<div class="content-section">
+    <h3>Overall sentimental</h3>
+    <ul class="list-group" style="width: inherit; height: 80vh; overflow: auto;">
+        {% for sentimental in stockSentimental %}
+        <li class="list-group-item list-group-item-light">
+
+            <h5 id="{{sentimental.stock}}">{{sentimental.stock}}</h5>
+            <br>
+            Mentioned times: {{sentimental.times}}
+
+            <div class="progress">
+
+                <div class="progress-bar bg-success" role="progressbar"
+                    style="width: {{100 * sentimental.times / highesetTimes}}%" aria-valuenow="25" aria-valuemin="0"
+                    aria-valuemax="100">
+                </div>
+            </div>
+            Emotion : {% if sentimental.emotion > 0 %} <a class="mr-2"
+                href="https://finance.yahoo.com/quote/{{sentimental.stock}}/">Buy</a> 🤑 {% elif sentimental.emotion ==
+            0 %} <a class="mr-2" href="https://finance.yahoo.com/quote/{{sentimental.stock}}/">hold 🧐 </a>{% else %} <a
+                class="mr-2" href="https://finance.yahoo.com/quote/{{sentimental.stock}}/">sell ☹ </a>{% endif %}
+            <br>
+            emotion score: {{sentimental.emotion}}
+        </li>
+        {%endfor %}
+    </ul>
+    </p>
+</div>
+{%endblock sidebar%}
+<script src="//cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js"
+    integrity="sha256-yr4fRk/GU1ehYJPAs8P4JlTgu0Hdsp4ZKrx8bDEDC3I=" crossorigin="anonymous"></script>
+<script type="text/javascript" charset="utf-8">
+    var socket = io('/');
+    socket.on('connect', function () {
+        socket.emit('my event', { data: 'I\'m connected!' });
+    });
+</script>
