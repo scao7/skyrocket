@@ -16,14 +16,14 @@ db = SQLAlchemy(app)
 # database creating 
 
 class Comments(db.Model):
-    id = db.Column(db.Integer)
+    id = db.Column(db.Integer,primary_key  = True)
     stock = db.Column(db.String(200),nullable= False)
     comment_body = db.Column(db.String(500),nullable=False)
     link_title = db.Column(db.String(200),nullable = False)
     emotion = db.Column(db.Float, nullable = False)
     author = db.Column(db.String(50),nullable = False)
     data_created = db.Column(db.DateTime, default = datetime.utcnow)
-    created_utc = db.Column(db.String,nullable =False,primary_key = True)
+    created_utc = db.Column(db.String,nullable =False)
     
     def __repr__(self):
         return '<Name %r> ' % self.id
@@ -105,7 +105,7 @@ def request_comments():
                 emotion = 0.0
                 # if(db.session.query(Comments.id).filter_by(created_utc=created_utc).scalar() is None):
                 
-                if(not Comments.query.filter_by(created_utc=created_utc).first()):
+                if(not Comments.query.filter_by(comment_body=content).first()):
                     # print("query utc result: not same utc")
                     try:
                         output = client.specific_resource_analysis(body={"document": {"text": content}}, params={'language': language, 'resource': 'sentiment'})
@@ -124,11 +124,11 @@ def request_comments():
                     if(get_sentimental):
                         get_sentimental.mentioned_times +=1
                         get_sentimental.overall_emotion += emotion
-                        # db.session.commit()
+                        db.session.commit()
                     else:
                         new_sentimental = Sentimental(stock = stock, overall_emotion=emotion, mentioned_times=1)
                         db.session.add(new_sentimental)
-                        # db.session.commit()
+                        db.session.commit()
                     
                     try:
                         db.session.add(new_comment)
