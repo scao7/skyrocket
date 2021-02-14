@@ -19,7 +19,7 @@
 // });
 
 
-var myInterval = setInterval(refresh, 10000);
+var myInterval = setInterval(refresh, 5000);
 function refresh(){
     window.location.reload()
 }

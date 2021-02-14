@@ -1,5 +1,5 @@
 from flask import Flask, render_template, url_for
-from flask_socketio import SocketIO, send, emit
+# from flask_socketio import SocketIO, send, emit
 import time 
 import requests
 import json
@@ -13,6 +13,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///comments.db'
 db = SQLAlchemy(app)
 
 
+# database creating 
 
 class Comments(db.Model):
     id = db.Column(db.Integer)
@@ -38,12 +39,9 @@ class Sentimental(db.Model):
         return '<Name %r> ' % self.id
 
 
-import os
-os.environ["EAI_USERNAME"] = 'scao7@crimson.ua.edu'
-os.environ["EAI_PASSWORD"] = 'Cst1995!'
-app.config['SECRET_KEY'] = 'secretkey'
-app.config['DEBUG'] = True
-socketio = SocketIO(app)
+# app.config['SECRET_KEY'] = 'secretkey'
+# app.config['DEBUG'] = True
+# socketio = SocketIO(app)
 # check if company exist in stock market
 def check_stock(text):
     company = []
@@ -64,10 +62,13 @@ def exist_in_json(stock):
         count = count + 1
     return -1
 
+# exper ai api
 from expertai.nlapi.cloud.client import ExpertAiClient
 client = ExpertAiClient()
 language= 'en'
 
+
+# get the comments from reddit and push to database 
 def request_comments():
     print(threading.current_thread().name)
     headers = {
@@ -151,21 +152,6 @@ def index():
         highestTimes=item.mentioned_times
         break
     threading.Thread(target=request_comments).start()
-    # print('query is : {}'.format(query))
-    # print('query type is : {}'.format(type(query)))
-    # stocks_emotion =  [{'stock': 'example','mentioned_times': 1, 'emotion': 0 }]
-    # for item in query:
-    #     if(not any(emotion.get('stock') == item.stock for emotion in stocks_emotion)):
-    #         stocks_emotion.append({'stock': item.stock,'mentioned_times': 1, 'emotion':item.emotion})
-    #     else:
-    #         for emotion in stocks_emotion:
-    #             if(emotion['stock'] == item.stock):
-    #                 emotion['emotion'] += item.emotion
-    #                 emotion['mentioned_times'] += 1
-
-    # Sentimental_query = Sentimental.query.order_by(Sentimental.mentioned_times.desc())
-
-    # sorted_stock_emotion = sorted(stocks_emotion, key=lambda k: k['mentioned_times'],reverse=True)  
     return render_template('index.html', comments = query.limit(20), stockSentimental=Sentimental_query,highestTimes=highestTimes)
 
 # @socketio.on('message')
