@@ -1,5 +1,7 @@
 # skyrocket
-
+# video demo 
+https://youtu.be/75XUZDVxpgY
+https://youtu.be/Avk3thNhQxE
 # how to run it 
 create a python environment 
 
